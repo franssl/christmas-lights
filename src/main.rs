@@ -21,6 +21,7 @@ fn main() -> ! {
         // Set up the LED. On the Nucleo-446RE it's connected to pin PA5.
         let gpioa = dp.GPIOA.split();
         let mut led = gpioa.pa5.into_push_pull_output();
+        let mut led4 = gpioa.pa6.into_push_pull_output();
 
         // Set up the system clock. We want to run at 48MHz for this one.
         let rcc = dp.RCC.constrain();
@@ -32,8 +33,10 @@ fn main() -> ! {
         loop {
             // On for 1s, off for 1s.
             led.set_high().unwrap();
+            led4.set_low().unwrap();
             delay.delay_ms(1000_u32);
             led.set_low().unwrap();
+            led4.set_high().unwrap();
             delay.delay_ms(1000_u32);
         }
     }
