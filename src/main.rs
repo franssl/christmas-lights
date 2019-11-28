@@ -1,4 +1,3 @@
-
 #![no_main]
 #![no_std]
 
@@ -10,8 +9,7 @@ use cortex_m::{iprint};
 use stm32f4xx_hal;
 
 use crate::stm32f4xx_hal::{prelude::*, stm32};
-use cortex_m_semihosting::{debug, hprintln};
-use rtfm::cyccnt::{Instant, U32Ext};
+use rtfm::cyccnt::{U32Ext, Duration};
 
 const PERIOD: u32 = 48_000_000;
 
@@ -20,9 +18,7 @@ const APP: () = {
 
     struct Resources {
         led : stm32f4xx_hal::gpio::gpioa::PA5<stm32f4xx_hal::gpio::Output<stm32f4xx_hal::gpio::PushPull>>,
-        is_on : bool,
         itm : cortex_m::peripheral::ITM
-
     }
 
     #[init(schedule = [blinky])]
@@ -32,7 +28,6 @@ const APP: () = {
 
         // Device specific peripherals
         let _device: stm32::Peripherals = cx.device;
-
         
         // Set up the LED. On the Nucleo-446RE it's connected to pin PA5.
         let gpioa = _device.GPIOA.split();
@@ -40,18 +35,16 @@ const APP: () = {
 
         // Set up the system clock. We want to run at 48MHz for this one.
         let rcc = _device.RCC.constrain();
-        rcc.cfgr.sysclk(48.mhz()).freeze();
-        
+        rcc.cfgr.sysclk(48.mhz()).freeze();    
 
-         // Initialize (enable) the monotonic timer (CYCCNT)
-         cx.core.DCB.enable_trace();
-         cx.core.DWT.enable_cycle_counter();
-         let itm = cx.core.ITM;
+        // Initialize (enable) the monotonic timer (CYCCNT)
+        cx.core.DCB.enable_trace();
+        cx.core.DWT.enable_cycle_counter();
+        let itm = cx.core.ITM;
         
         let now = cx.start;
         cx.schedule.blinky(now + PERIOD.cycles()).unwrap();
-        init::LateResources { led, is_on: false, itm}
-        
+        init::LateResources {led, itm}    
     }
 
     #[task(schedule = [blinky], resources = [led, itm])]
@@ -67,8 +60,8 @@ const APP: () = {
         }
         *IS_ON=!*IS_ON;
         
-        iprint!(&mut cx.resources.itm.stim[0], "{:?}", Instant::now());
-        cx.schedule.blinky(cx.scheduled + PERIOD.cycles()).unwrap();
+        //iprint!(&mut cx.resources.itm.stim[0], "Next scheduled event:{:?}", cx.scheduled + Duration::from_cycles(PERIOD));
+        cx.schedule.blinky(cx.scheduled + Duration::from_cycles(PERIOD)).ok();
     }
 
     extern "C" {
