@@ -8,8 +8,15 @@ extern crate panic_halt; // panic handler
 use cortex_m::{iprint};
 use stm32f4xx_hal;
 
+use stm32f4xx_hal::spi::*;
+
 use crate::stm32f4xx_hal::{prelude::*, stm32};
 use rtfm::cyccnt::{U32Ext, Duration};
+
+use ws2812_spi as ws2812;
+use crate::ws2812::Ws2812;
+use smart_leds_trait::RGB8;
+use smart_leds::SmartLedsWrite;
 
 const PERIOD: u32 = 48_000_000;
 
